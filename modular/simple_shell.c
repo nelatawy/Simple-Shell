@@ -25,6 +25,7 @@ void run_startup_code();
 
 int main() {
     signal(SIGCHLD, handle_child_exit);
+    init_vars_array();
     run_startup_code();
     setup_env();
     run_shell();
@@ -46,11 +47,11 @@ void setup_env(){
         return ;
     }
 
-    init_vars_array();
 }
 
 void run_shell(){
-    printf("\n\033[1;34m%s\033[0m ", "Welcome back R3tro");
+    char *usr = get_expanded_str("USER",4);
+    printf("\n\033[1;34mWelcome %s\033[0m ", usr);
     while (1){
 
         printf("\n\033[1;32m%s\033[0m :", getcwd(NULL,0));  
