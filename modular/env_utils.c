@@ -66,40 +66,6 @@ void append_expanded_val(char *new_str, char *token, int cnt){
     }
 }
 
-// static char* handle_double_quotes(char *token) {
-//     int len = strlen(token);
-
-//     // char **tokens = tokenize_input(inner, &tok_cnt);
-//     // free(inner);
-//     // if (!tokens) return NULL;
-
-//     char* expanded = expand_in_token(token);
-
-//     int total_size = 0;
-//     // for (int i = 0; i < tok_cnt; i++)
-//     //     total_size += strlen(tokens[i]);
-    
-//     // char *new_str = malloc(sizeof(char) * (total_size + tok_cnt));
-//     // if (!new_str) {
-//     //     free_tokens(tokens, tok_cnt);
-//     //     return NULL;
-//     // }
-//     // new_str[0] = '\0';
-
-//     // for (int i = 0; i < tok_cnt; i++) {
-//     //     strcat(new_str, tokens[i]);
-//     //     if (i < tok_cnt - 1) {
-//     //         strcat(new_str, " ");
-//     //     }
-//     // }
-//     // free_tokens(tokens, tok_cnt);
-//     char *new_str = malloc(sizeof(char) * (len + 1)); // size + null term.
-//     if (!new_str) return NULL;
-//     strcpy(new_str, token);
-//     new_str[len] = '\0';
-//     return new_str;
-// }
-
 token expand_in_token(token tok){
     if (tok.str == NULL || strlen(tok.str) == 0) return empty_tok();
     if (!tok.expandable){
