@@ -52,9 +52,12 @@ void setup_env(){
 void run_shell(){
     char *usr = get_expanded_str("USER",4);
     printf("\n\033[1;34mWelcome %s\033[0m ", usr);
-    while (1){
+    free(usr);
 
-        printf("\n\033[1;32m%s\033[0m :", getcwd(NULL,0));  
+    while (1){
+        char * cwd = getcwd(NULL,0);
+        printf("\n\033[1;32m%s\033[0m :", cwd);  
+        free(cwd);
 
         char *input = malloc(sizeof(char) * 200);
         scanf(" %199[^\n]", input);

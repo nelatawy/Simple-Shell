@@ -101,7 +101,7 @@ token* split_tokens(token* tokens, int* tok_cnt){
         {
             new_tokens[new_len++] = tok_parts[j]; 
         }
-        free(tok_parts); //only the list but not individual tokens
+        free(tok_parts); //old array with old copy of tokens are freed but the new copies are intact
         
     }
     new_tokens = realloc(new_tokens, (new_len) * sizeof(token)); //trim the size back --> no over-allocation

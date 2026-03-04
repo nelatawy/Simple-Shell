@@ -43,9 +43,12 @@ the reason why it's a `while` while rather than a simple `waitpid`is because the
 void run_shell(){
     char *usr = get_expanded_str("USER",4);
     printf("\n\033[1;34mWelcome %s\033[0m ", usr);
-    while (1){
+    free(usr);
 
-        printf("\n\033[1;32m%s\033[0m :", getcwd(NULL,0));  
+    while (1){
+        char * cwd = getcwd(NULL,0);
+        printf("\n\033[1;32m%s\033[0m :", cwd);  
+        free(cwd);
 
         char *input = malloc(sizeof(char) * 200);
         scanf(" %199[^\n]", input);
@@ -57,6 +60,7 @@ void run_shell(){
         
     }
 }
+
 ```
 the first part is merely for aesthetics, it gets the `USER` env that can be defined in the `.shellrc` to give a personalized feel to the shell.
 
@@ -85,16 +89,21 @@ void exec_command(char *input){
     int tok_count;
     token* tokens = tokenize_input(input, &tok_count);
 
+    
     if(tokens == NULL){
         perror("An error occured while trying to parse command");
         return;
     }
     expand_all_in_tokens(tokens, tok_count);
 
+
     token* temp = tokens;
+    int old_tk_cnt = tok_count;
+
+
     tokens = split_tokens(tokens, &tok_count);
 
-    free_tokens(temp, tok_count);
+    free_tokens(temp, old_tk_cnt);
 
     char **argv = tok_to_str(tokens, tok_count);
     free_tokens(tokens, tok_count);

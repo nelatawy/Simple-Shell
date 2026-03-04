@@ -173,11 +173,12 @@ void exec_command(char *input){
 
 
     token* temp = tokens;
+    int old_tk_cnt = tok_count;
 
 
     tokens = split_tokens(tokens, &tok_count);
 
-    free_tokens(temp, tok_count);
+    free_tokens(temp, old_tk_cnt);
 
     char **argv = tok_to_str(tokens, tok_count);
     free_tokens(tokens, tok_count);
