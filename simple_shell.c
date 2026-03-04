@@ -34,7 +34,7 @@ int main() {
 
 void handle_child_exit(int signum){
     pid_t pid;
-    while (pid = waitpid(-1, NULL, WNOHANG) > 0);
+    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0);
     //handles if many children exit at once
     
 }
@@ -58,9 +58,9 @@ void run_shell(){
 
         char *input = malloc(sizeof(char) * 200);
         scanf(" %199[^\n]", input);
-        exec_command(input);
         if (input !=NULL)
         {
+            exec_command(input);
             free(input);
         }
         

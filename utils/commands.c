@@ -12,7 +12,7 @@
 
 
 
-struct command builtins[] = {
+command builtins[] = {
     {"cd", handle_cd},
     {"exit", handle_exit},
     {"export", handle_export},
@@ -113,9 +113,6 @@ int handle_cd(int argc, char** argv){
         res =  chdir(argv[1]);
     }
 
-    // char buffer [100];
-    // getcwd(buffer, sizeof(buffer));
-    // printf("%s", buffer);
     return res;
 }
 
@@ -180,7 +177,7 @@ void exec_command(char *input){
 
     tokens = split_tokens(tokens, &tok_count);
 
-    // free_tokens(temp, tok_count);
+    free_tokens(temp, tok_count);
 
     char **argv = tok_to_str(tokens, tok_count);
     free_tokens(tokens, tok_count);
@@ -190,7 +187,8 @@ void exec_command(char *input){
     } else {
         handle_external_commands(tok_count, argv);
     }
-    // free_tokens(argv, tok_count);
+    free_strs(argv, tok_count);
+    
 }
 
 void handle_builtin(int argc, char** argv){

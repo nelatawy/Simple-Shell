@@ -9,7 +9,6 @@
 
 void init_vars_array(){
     vars = malloc(INITIAL_VAR_CNT * sizeof(env_var));
-    s_env("hello", "world");
 }
 
 void s_env(char *var_name, char *val){
@@ -55,7 +54,7 @@ char* get_expanded_str(char *token, int cnt){
             return value;
         }
     }
-    return NULL;
+    return "";
 }
 
 void append_expanded_val(char *new_str, char *token, int cnt){

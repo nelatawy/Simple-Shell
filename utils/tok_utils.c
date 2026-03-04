@@ -125,3 +125,11 @@ void free_tokens(token* tokens, int tok_count) {
     }
     free(tokens);
 }
+
+void free_strs(char** strs, int cnt){
+    for (int i = 0; i < cnt; i++)
+    {
+        free(strs[i]);
+    }
+    free(strs);
+}

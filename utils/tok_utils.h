@@ -23,5 +23,6 @@ char** tok_to_str(token* toks, int cnt);
 
 void free_tokens(token* tokens, int tok_count);
 
+void free_strs(char** strs, int cnt);
 #endif
 
