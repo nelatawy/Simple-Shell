@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "env_utils.h"
-#include "tok_utils.h"
 
 #define INITIAL_VAR_CNT 10
 
@@ -19,7 +18,7 @@ void s_env(char *var_name, char *val){
         if (strcmp(var_name, vars[i].var_name) != 0){
             continue;
         }
-        vars[i].value = realloc(vars[i].value, strlen(val + 1) * sizeof(char));
+        vars[i].value = realloc(vars[i].value, (strlen(val) + 1) * sizeof(char));
         strcpy(vars[i].value, val);
         vars[i].value[strlen(val)] = '\0';
         return;
@@ -67,59 +66,50 @@ void append_expanded_val(char *new_str, char *token, int cnt){
     }
 }
 
-static char* handle_single_quotes(char *token) {
-    int len = strlen(token);
-    char *new_str = malloc(sizeof(char) * (len - 1)); // size without quotes + null term.
-    if (!new_str) return NULL;
-    strncpy(new_str, &token[1], len - 2);
-    new_str[len - 2] = '\0';
-    return new_str;
-}
+// static char* handle_double_quotes(char *token) {
+//     int len = strlen(token);
 
-static char* handle_double_quotes(char *token) {
-    int len = strlen(token);
-    char *inner = malloc(sizeof(char) * (len - 1));
-    if (!inner) return NULL;
-    strncpy(inner, &token[1], len - 2);
-    inner[len - 2] = '\0';
+//     // char **tokens = tokenize_input(inner, &tok_cnt);
+//     // free(inner);
+//     // if (!tokens) return NULL;
 
-    int tok_cnt;
-    char **tokens = tokenize_input(inner, &tok_cnt);
-    free(inner);
-    if (!tokens) return NULL;
+//     char* expanded = expand_in_token(token);
 
-    expand_all_in_tokens(tokens, tok_cnt);
-
-    int total_size = 0;
-    for (int i = 0; i < tok_cnt; i++)
-        total_size += strlen(tokens[i]);
+//     int total_size = 0;
+//     // for (int i = 0; i < tok_cnt; i++)
+//     //     total_size += strlen(tokens[i]);
     
-    char *new_str = malloc(sizeof(char) * (total_size + tok_cnt));
-    if (!new_str) {
-        free_tokens(tokens, tok_cnt);
-        return NULL;
+//     // char *new_str = malloc(sizeof(char) * (total_size + tok_cnt));
+//     // if (!new_str) {
+//     //     free_tokens(tokens, tok_cnt);
+//     //     return NULL;
+//     // }
+//     // new_str[0] = '\0';
+
+//     // for (int i = 0; i < tok_cnt; i++) {
+//     //     strcat(new_str, tokens[i]);
+//     //     if (i < tok_cnt - 1) {
+//     //         strcat(new_str, " ");
+//     //     }
+//     // }
+//     // free_tokens(tokens, tok_cnt);
+//     char *new_str = malloc(sizeof(char) * (len + 1)); // size + null term.
+//     if (!new_str) return NULL;
+//     strcpy(new_str, token);
+//     new_str[len] = '\0';
+//     return new_str;
+// }
+
+token expand_in_token(token tok){
+    if (tok.str == NULL || strlen(tok.str) == 0) return empty_tok();
+    if (!tok.expandable){
+        token new_tok = {.str = copy_str(tok.str), .expandable = false, .splittable = tok.splittable};
+        return new_tok;
     }
-    new_str[0] = '\0';
 
-    for (int i = 0; i < tok_cnt; i++) {
-        strcat(new_str, tokens[i]);
-        if (i < tok_cnt - 1) {
-            strcat(new_str, " ");
-        }
-    }
-    free_tokens(tokens, tok_cnt);
-    return new_str;
-}
-
-char* expand_in_token(char *token){
-    if (token == NULL || strlen(token) == 0) return NULL;
-
-    if (token[0] == '\'') return handle_single_quotes(token);
-    if (token[0] == '\"') return handle_double_quotes(token);
-
-    int end = strlen(token) - 1;
+    int end = strlen(tok.str) - 1;
     char *new_str = malloc(sizeof(char) * 1024);
-    if (!new_str) return NULL;
+    if (!new_str) return empty_tok();
     new_str[0] = '\0';
 
     int last_var_start = -1;
@@ -128,7 +118,7 @@ char* expand_in_token(char *token){
     int new_str_len = 0;
 
     for(int i = 0; i <= end; i++){     
-        if (token[i] == '$'){
+        if (tok.str[i] == '$'){
             var_symb_cnt++;
             last_var_start = i;
             in_var = 1;
@@ -143,11 +133,11 @@ char* expand_in_token(char *token){
             new_str_len = strlen(new_str);
         }
         else if(!in_var) {
-            new_str[new_str_len++] = token[i];
+            new_str[new_str_len++] = tok.str[i];
             new_str[new_str_len] = '\0';
         } 
-        else if(token[i] == ' '){
-            append_expanded_val(new_str, &token[last_var_start + 1], i - last_var_start - 1);
+        else if(tok.str[i] == ' '){
+            append_expanded_val(new_str, &tok.str[last_var_start + 1], i - last_var_start - 1);
             new_str_len = strlen(new_str);
             in_var = 0;
             var_symb_cnt = 0;
@@ -155,17 +145,21 @@ char* expand_in_token(char *token){
     }
 
     if (in_var){//the variabe wasn't marked yet
-        append_expanded_val(new_str, &token[last_var_start + 1], end - last_var_start);
+        append_expanded_val(new_str, &tok.str[last_var_start + 1], end - last_var_start);
+        new_str_len = strlen(new_str);
     }
 
-    char *temp = realloc(new_str, strlen(new_str) + 1);
-    return temp ? temp : new_str;
+    new_str = realloc(new_str, new_str_len + 1);
+    new_str[new_str_len] = '\0';
+
+    token new_tok = {.str = new_str, .expandable = false, .splittable = tok.splittable};
+    return new_tok;
 }
 
-void expand_all_in_tokens(char ** tokens, int size){
+void expand_all_in_tokens(token* tokens, int size){
     for (int i = 0; i < size; i++){
-        char *new_tok = expand_in_token(tokens[i]);
-        free(tokens[i]);
+        token new_tok = expand_in_token(tokens[i]);
+        free(tokens[i].str);  //it's fine since it's already copied in the new token
         tokens[i] = new_tok;
     }
 }

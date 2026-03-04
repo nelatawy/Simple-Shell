@@ -3,15 +3,34 @@
 #include <string.h>
 #include "tok_utils.h"
 
-void allocate_n_copy(char **dest, char* src, int cnt){
-    *dest = malloc((cnt + 1) * sizeof(char));
-    strncpy(*dest, src, cnt);
-    (*dest)[cnt] ='\0';    
+token to_token(char* src, int cnt, bool expandable, bool splittable){
+    token tok;
+    tok.str = malloc(sizeof(char) * (cnt + 1));
+    strncpy(tok.str, src, cnt);
+    tok.str[cnt] = '\0';
+    tok.expandable = expandable;
+    tok.splittable = splittable;
+    return tok;
 }
 
-char** tokenize_input(char *input ,int* tok_count){
+token empty_tok(){
+    token tok = {.str = "\0", .expandable = false, .splittable = false};
+    return tok;
+}
+
+char* copy_str(char *token) {
+    int len = strlen(token);
+    char *new_str = malloc(sizeof(char) * (len + 1)); // size + null term.
+    if (!new_str) return NULL;
+    strcpy(new_str, token);
+    new_str[len] = '\0';
+    return new_str;
+}
+
+
+token* tokenize_input(char* input ,int* tok_count){
     int length = 0;
-    char**tokens = malloc(sizeof(char*) * 10);
+    token* tokens = malloc(sizeof(token) * 10);
 
     int last_sep_idx = -1;
     int in_quotes = 0;
@@ -27,23 +46,25 @@ char** tokenize_input(char *input ,int* tok_count){
                 in_quotes = 1;
                 last_q_type = c;
                 if (last_sep_idx < i -1) //we should add as a token as well --> case aloha"hello" (we must add aloha)
-                    allocate_n_copy(&tokens[length++], &input[last_sep_idx + 1], char_count - 2);
+                    tokens[length++] = to_token(&input[last_sep_idx + 1], char_count - 2, true, true); 
+                    // it can be both like $var if var="cd .." (without quotes) then we should split it after tokenization
+                    // and we need to be able to expand it from $var to cd ..
                 last_sep_idx = i;
             }
             else if(c == last_q_type){ //closing quoted block
-                allocate_n_copy(&tokens[length], &input[last_sep_idx], char_count); //to include the quotes for later semantics
-                length++;
+                tokens[length++] = to_token(&input[last_sep_idx + 1], char_count - 2, c == '\"', false);
+                //if enclosed by quotes --> do not split , and only allow expansion with double quotes
                 in_quotes = 0;
                 last_sep_idx = i;
             }
         }
 
-        else if (!in_quotes && c == ' ')
+        else if (!in_quotes && c == ' ') //unquoted term
         {
-            if(char_count >= 1){
-                allocate_n_copy(&tokens[length], &input[last_sep_idx + 1], char_count - 2); // remove the enclosing spaces
-                length++;
-            }
+            if(char_count - 2 >= 1) //must have at least a char between sep
+                tokens[length++] = to_token(&input[last_sep_idx + 1], char_count - 2, true, true);
+                // remove the enclosing seperators , and since it's unquoted allow for splitting after expansion
+            
             last_sep_idx = i;
         }
     }
@@ -52,10 +73,9 @@ char** tokenize_input(char *input ,int* tok_count){
         return NULL;
     }
     int n = strlen(input);
-    if (last_sep_idx < n - 1){ //catch last untracked block
-        allocate_n_copy(&tokens[length], &input[last_sep_idx + 1], char_count - 1); // remove the leading space
-        length++;
-    }
+    if (last_sep_idx < n - 1) //catch last untracked 'unquoted' block
+        tokens[length++] = to_token(&input[last_sep_idx + 1], char_count - 1, true, true); // remove the leading seperator
+
 
     if(tok_count != NULL)
         *tok_count = length;
@@ -63,29 +83,46 @@ char** tokenize_input(char *input ,int* tok_count){
     return tokens;
 }
 
-char** split_tokens(char **tokens, int tok_cnt){ 
-    char **new_tokens = malloc(sizeof(char*) * tok_cnt * 20);
+token* split_tokens(token* tokens, int* tok_cnt){ 
+    token* new_tokens = malloc(sizeof(token) * (*tok_cnt) * 20);
     int new_len = 0;
-    for (int i = 0; i < tok_cnt; i++)
+    for (int i = 0; i < *tok_cnt; i++)
     {   
+        if (!tokens[i].splittable){
+            token new_tok = {.str = copy_str(tokens[i].str), .expandable = tokens[i].expandable, .splittable = false};
+            new_tokens[new_len++] = new_tok;
+            continue;
+        }
+            
+          
         int part_cnt;
-        char **tok_parts = tokenize_input(tokens[i], &part_cnt);
+        token* tok_parts = tokenize_input(tokens[i].str, &part_cnt);
         for (int j = 0; j < part_cnt; j++)
         {
-            new_tokens[new_len++] = tok_parts[j]; //no need to strcpy --> just take the out strings
+            new_tokens[new_len++] = tok_parts[j]; 
         }
-        free(tok_parts); //only the list but not the strings
+        free(tok_parts); //only the list but not individual tokens
         
     }
-    new_tokens = realloc(new_tokens, (new_len + 1) * sizeof(char*)); //trim the size back --> no over-allocation
-    // execvp expects argv to be NULL-terminated
-    new_tokens[new_len] = NULL;
+    new_tokens = realloc(new_tokens, (new_len) * sizeof(token)); //trim the size back --> no over-allocation
+    *tok_cnt = new_len;
+    printf("%d is the new length", *tok_cnt);
     return new_tokens;
 }
 
-void free_tokens(char** tokens, int tok_count) {
+char** tok_to_str(token* toks, int cnt){
+    char** strs = malloc(sizeof(char*) * (cnt + 1));
+    for (int i = 0; i < cnt; i++)
+    {
+        strs[i] = copy_str(toks[i].str);
+    }
+    strs[cnt] = NULL;
+    return strs;
+}
+
+void free_tokens(token* tokens, int tok_count) {
     for(int i = 0; i < tok_count; i++){
-        free(tokens[i]);
+        free(tokens[i].str);
     }
     free(tokens);
 }

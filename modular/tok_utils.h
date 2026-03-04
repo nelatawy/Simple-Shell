@@ -1,17 +1,27 @@
 #ifndef TOK_UTILS_H
 #define TOK_UTILS_H
 
-#include "env_utils.h"
-extern env_var *vars;
-extern int def_vars_cnt;
+#include <stdbool.h>
 
-void allocate_n_copy(char **dest, char* src, int cnt);
+typedef struct{
+    char *str;
+    bool splittable;
+    bool expandable;
+} token;
 
-char** tokenize_input(char *input ,int* tok_count);
+token to_token(char* src, int cnt, bool expandable, bool splittable);
 
-char** split_tokens(char **tokens, int tok_cnt);
+token empty_tok();
 
-void free_tokens(char** tokens, int tok_count);
+char* copy_str(char *token);
+
+token* tokenize_input(char* input ,int* tok_count);
+
+token* split_tokens(token* tokens, int* tok_cnt);
+
+char** tok_to_str(token* toks, int cnt);
+
+void free_tokens(token* tokens, int tok_count);
 
 #endif
 

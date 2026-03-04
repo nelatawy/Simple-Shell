@@ -34,7 +34,7 @@ static char *extract_from_quotes(char* str){
     
     int char_cnt = len - ((has_quotes)?2:0);
     char *inner = malloc(sizeof(char) * (char_cnt + 1));
-    strncpy(&inner[start], str, char_cnt);
+    strncpy(inner, &str[start], char_cnt);
     inner[char_cnt] = '\0';
     return inner;
 }
@@ -52,7 +52,7 @@ static int handle_unitoken_assignment(char* assignment){
         strncpy(var_name, assignment, i);
         var_name[i] = '\0';
         if (!is_valid_var(var_name))
-        {
+        {   free(var_name);
             perror("a variable name must start with an alphabetical letter and the rest must be alphaneumeric");
             return 0;
         }
@@ -165,27 +165,48 @@ int handle_eval(int argc, char **argv){
 
 void exec_command(char *input){
     int tok_count;
-    char** tokens = tokenize_input(input, &tok_count);
-
-
+    token* tokens = tokenize_input(input, &tok_count);
+    printf("tokens --> tok count : %d\n", tok_count);
+    for (int i = 0; i < tok_count; i++)
+    {
+        printf("%s ",tokens[i].str);
+    }
+    printf("\n");
+    
     if(tokens == NULL){
         perror("An error occured while trying to parse command");
         return;
     }
     expand_all_in_tokens(tokens, tok_count);
 
-    if (is_builtin(tokens[0])){
-        handle_builtin(tok_count, tokens);
-    } else {
-        // if it's not builtin we split the words as well 
-        char** temp = tokens;
-
-        tokens = split_tokens(tokens, tok_count);
-        free_tokens(temp, tok_count);
-
-        handle_external_commands(tok_count, tokens);
+    printf("expanded --> tok count : %d\n", tok_count);
+    for (int i = 0; i < tok_count; i++)
+    {
+        printf("%s ",tokens[i].str);
     }
+    printf("\n");
+
+    token* temp = tokens;
+    // printf("%d testing waters", tok_count);
+
+    tokens = split_tokens(tokens, &tok_count);
+    printf("split --> tok count : %d\n", tok_count);
+    for (int i = 0; i < tok_count; i++)
+    {
+        printf("%s ",tokens[i].str);
+    }
+    printf("\n");
+    // free_tokens(temp, tok_count);
+
+    char **argv = tok_to_str(tokens, tok_count);
     free_tokens(tokens, tok_count);
+
+    if (is_builtin(argv[0])){
+        handle_builtin(tok_count, argv);
+    } else {
+        handle_external_commands(tok_count, argv);
+    }
+    // free_tokens(argv, tok_count);
 }
 
 void handle_builtin(int argc, char** argv){
