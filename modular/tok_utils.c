@@ -106,7 +106,6 @@ token* split_tokens(token* tokens, int* tok_cnt){
     }
     new_tokens = realloc(new_tokens, (new_len) * sizeof(token)); //trim the size back --> no over-allocation
     *tok_cnt = new_len;
-    printf("%d is the new length", *tok_cnt);
     return new_tokens;
 }
 

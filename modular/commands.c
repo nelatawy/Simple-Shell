@@ -166,12 +166,7 @@ int handle_eval(int argc, char **argv){
 void exec_command(char *input){
     int tok_count;
     token* tokens = tokenize_input(input, &tok_count);
-    printf("tokens --> tok count : %d\n", tok_count);
-    for (int i = 0; i < tok_count; i++)
-    {
-        printf("%s ",tokens[i].str);
-    }
-    printf("\n");
+
     
     if(tokens == NULL){
         perror("An error occured while trying to parse command");
@@ -179,23 +174,12 @@ void exec_command(char *input){
     }
     expand_all_in_tokens(tokens, tok_count);
 
-    printf("expanded --> tok count : %d\n", tok_count);
-    for (int i = 0; i < tok_count; i++)
-    {
-        printf("%s ",tokens[i].str);
-    }
-    printf("\n");
 
     token* temp = tokens;
-    // printf("%d testing waters", tok_count);
+
 
     tokens = split_tokens(tokens, &tok_count);
-    printf("split --> tok count : %d\n", tok_count);
-    for (int i = 0; i < tok_count; i++)
-    {
-        printf("%s ",tokens[i].str);
-    }
-    printf("\n");
+
     // free_tokens(temp, tok_count);
 
     char **argv = tok_to_str(tokens, tok_count);
