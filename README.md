@@ -45,15 +45,57 @@ void run_shell(){
     printf("\n\033[1;34mWelcome %s\033[0m ", usr);
     free(usr);
 
+
     while (1){
         char * cwd = getcwd(NULL,0);
         printf("\n\033[1;32m%s\033[0m :", cwd);  
+        fflush(stdout);
         free(cwd);
 
         char *input = malloc(sizeof(char) * 200);
-        scanf(" %199[^\n]", input);
+        input[0] = '\0';
+        // scanf(" %199[^\n]", input);
+        int pos = 0;
+        enable_raw_mode();
+        while (1){
+            char c[1];
+            read(STDIN_FILENO, &c, 1);
+            if (c[0] == 3) {//CTRL + C
+                disable_raw_mode();
+                exit(0);
+            }
+
+            else if (c[0] == 27) //ESC
+            {
+                char seq[2];
+                read(STDIN_FILENO, &seq[0], 1);
+                read(STDIN_FILENO, &seq[1], 1);
+
+                if (seq[0] == '[') {
+                    if (seq[1] == 'A') ; // top
+                    if (seq[1] == 'B') ; // bottom
+                    if (seq[1] == 'C') handle_move_right(input, &pos);// right
+                    if (seq[1] == 'D') handle_move_left(input, &pos); // left
+                }
+            }
+            else if (c[0] == 127) //backspace
+            {
+                handle_backspace(input, &pos);
+            }
+
+            else if (c[0] == '\n'){
+                break;
+            }
+            
+            else {
+                handle_insert_char(input, c[0], &pos);
+            }
+                
+        }
+        disable_raw_mode();
         if (input !=NULL)
-        {
+        {   
+            printf("\n");
             exec_command(input);
             free(input);
         }
@@ -65,6 +107,9 @@ void run_shell(){
 the first part is merely for aesthetics, it gets the `USER` env that can be defined in the `.shellrc` to give a personalized feel to the shell.
 
 then we enter a `while` that simply gets the input from the stdin, prints the `cwd` (preceeded by an escape sequence to color the terminal and highlight the cwd).
+i chose `termios` to be able to have control over the effect of cursor keys and have the ability to go back and forth and remove some chars and have a more user-friendly experience (it's a must to be able to edit your command tbh).
+we simply enable raw-mode to have full control over the stdin and let be a simple dumb buffer and disabling the canonical behavior to make it char-buffered not line-buffered and we provide custom behavior according to the key pressed.
+
 and then we check if input is not NULL and then we start handling the command.
 
 ---
