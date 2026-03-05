@@ -40,7 +40,7 @@ void handle_child_exit(int signum){
 }
 
 void setup_env(){
-    char *home = getenv("HOME");
+    // char *home = getenv("HOME");
 
     if (chdir("/") != 0) {
         perror("chdir failed");

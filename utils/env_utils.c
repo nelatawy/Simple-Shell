@@ -54,7 +54,7 @@ char* get_expanded_str(char *token, int cnt){
             return value;
         }
     }
-    return "";
+    return NULL;
 }
 
 void append_expanded_val(char *new_str, char *token, int cnt){
@@ -82,7 +82,21 @@ token expand_in_token(token tok){
     int var_symb_cnt = 0;
     int new_str_len = 0;
 
-    for(int i = 0; i <= end; i++){     
+    bool ignore = 0;
+
+    for(int i = 0; i <= end; i++){    
+        //handle non-expandable substrings
+        if (tok.str[i] == '\'')
+            ignore = ~ignore;
+        
+        if (ignore)
+        {
+            new_str[new_str_len++] = tok.str[i];
+            new_str[new_str_len] = '\0';
+            continue;
+        }
+        
+        // handling $ expansion
         if (tok.str[i] == '$'){
             var_symb_cnt++;
             last_var_start = i;
@@ -97,7 +111,9 @@ token expand_in_token(token tok){
             in_var = 0;
             new_str_len = strlen(new_str);
         }
-        else if(!in_var) {
+
+        
+        if(!in_var) {
             new_str[new_str_len++] = tok.str[i];
             new_str[new_str_len] = '\0';
         } 

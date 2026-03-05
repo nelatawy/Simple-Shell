@@ -69,7 +69,6 @@ static int handle_bitok_assignment(char* first, char* second){
     char *var_name;
     char *val;
     int len1 = strlen(first);
-    int len2 = strlen(second);
     first[len1 - 1] = '\0'; //remove the equal
     if (!is_valid_var(first))
     {
