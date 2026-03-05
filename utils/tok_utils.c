@@ -28,6 +28,16 @@ char* copy_str(char *token) {
 }
 
 
+void insert_char(char *str, char c, int pos) {
+    int len = strlen(str);
+    for (int i = len - 1; i >= pos; i--) {
+        str[i + 1] = str[i];
+    }
+    str[pos] = c;
+    str[len + 1] = '\0';
+}
+
+
 token* tokenize_input(char* input ,int* tok_count){
     int length = 0;
     token* tokens = malloc(sizeof(token) * 10);

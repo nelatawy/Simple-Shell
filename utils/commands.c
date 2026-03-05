@@ -145,6 +145,7 @@ int handle_echo(int argc, char **argv){
         printf("%s ", argv[i]);
     }
     printf("\n");
+    fflush(stdout);
     return 0;
     
 }

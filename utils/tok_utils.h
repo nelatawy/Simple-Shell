@@ -15,6 +15,8 @@ token empty_tok();
 
 char* copy_str(char *token);
 
+void insert_char(char *str, char c, int pos);
+
 token* tokenize_input(char* input ,int* tok_count);
 
 token* split_tokens(token* tokens, int* tok_cnt);
